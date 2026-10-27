@@ -1,0 +1,14 @@
+node_modules/
+.backups/
+test-results/
+AGENT.md
+tests/
+.env*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+*.log
+fk-the-ai-config.json
+fk-the-ai-pet-session.json

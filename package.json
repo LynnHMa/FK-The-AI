@@ -1,0 +1,60 @@
+{
+  "name": "dsh-fk-the-ai",
+  "version": "1.0.0",
+  "description": "AI不听话？乱动项目？那就揍它一顿！",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "ragdoll",
+    "anti-stress",
+    "rage-monitor"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "node --test tests/combat.test.js",
+    "test:browser": "node tests/browser-test.js",
+    "test:theme": "node tests/theme-browser-test.js",
+    "test:extensions": "node tests/extensions-browser-test.js",
+    "test:redesign": "node tests/redesign-browser-test.js",
+    "test:desktop": "node tests/desktop-pet-test.js",
+    "test:desktop-upgrade": "node tests/desktop-upgrade-test.js",
+    "test:desktop-arena": "node tests/desktop-arena-worker-test.js",
+    "test:desktop-perf": "node tests/desktop-perf-test.js",
+    "test:collision": "node tests/alpha-collision-test.js",
+    "preview": "node tests/harness-server.js",
+    "test:workshop": "node --test tests/workshop.test.js tests/weapon-runtime.test.js tests/weapon-values.test.js && node tests/workshop-browser-test.js && node tests/desktop-workshop-test.js",
+    "test:desktop-custom": "node tests/desktop-custom-native-test.js",
+    "test:interaction": "node tests/interaction-browser-test.js",
+    "test:desktop-session": "node tests/desktop-session-test.js",
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "pretest": "npm run check:i18n",
+    "test:i18n": "node tests/i18n-browser-test.js",
+    "test:i18n-native": "node tests/i18n-native-test.js"
+  },
+  "icon": "./icon.png",
+  "files": [
+    "lib",
+    "assets",
+    "docs",
+    "lang",
+    "icon.png",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "acorn": "^8.19.0",
+    "playwright-core": "1.64.1"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^1.0.13",
+    "yaml": "^2.9.1"
+  }
+}
