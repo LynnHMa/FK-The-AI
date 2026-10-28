@@ -43,7 +43,24 @@ dsh plugin --profile web add "github:LynnHMa/FK-The-AI"
 ```powershell
 npx @deepseek-ai/dsh plugin --profile desktop add "github:LynnHMa/FK-The-AI"
 ```
-  
+
+<details>
+<summary><b>更新插件</b></summary>
+ 
+---
+ 
+- 桌面端：
+```powershell
+dsh plugin --profile desktop update dsh-fk-the-ai
+```
+
+- Web 端：
+```powershell
+dsh plugin --profile web update dsh-fk-the-ai
+```
+
+</details>
+   
 --- 
   
 ## 二、玩法介绍
