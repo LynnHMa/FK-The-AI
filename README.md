@@ -133,7 +133,10 @@ dsh plugin --profile web update dsh-fk-the-ai
  - **预设分享**：导入导出您的桌宠预设！
    
   > 将您的桌宠放于桌面，同时您可以在桌面对它进行**处刑**！
-  
+
+ > 这里有我自己拼的大肥鱼，不太完美，但是能打OWO：
+ > [分享了有趣的桌宠预设](https://github.com/LynnHMa/FK-The-AI-Pets)
+
 ---
   
 ### 4. 脏话计数器
