@@ -14,7 +14,7 @@
   catch (error) { window.__FK_THE_AI_LOADED__ = false; console.error(i18nText("client.001"), error); return; }
   const { WEAPONS, WEAPON_KEYS, weaponCatalog, DEFAULT_SETTINGS, THEMES, THEME_COLOR_KEYS, resolveTheme, BODY_PARTS, validTexture, normalizeSettings, createCombat, normalizeRig, loadPuppetImages } = combatModule;
   const {createPet}=await import('/fk-the-ai/pet.js');
-  const {createModeler}=await import('/fk-the-ai/modeler.js');
+  const {createModeler,modelIcon}=await import('/fk-the-ai/modeler.js');
   const {createWordCloud}=await import('/fk-the-ai/word-cloud.js');
   const {createWeaponEditor}=await import('/fk-the-ai/weapon-editor.js');
   const {createDialogueEditor}=await import('/fk-the-ai/dialogue-editor.js');
@@ -75,12 +75,16 @@
       `<details><summary>${i18nHtml("client.030")}</summary>`+controls.slice(16).map(c=>rangeControl(...c)).join('')+rangeControl('liquidAlpha',"client.031",0,1,.05)+`<label class="fk-ai-control-row"><span>${i18nHtml("client.032")}</span><input aria-label="${i18nHtml("client.032")}" type="range" class="fk-ai-slider" id="fk-slider-blood" min="0" max="500" value="25"><output id="fk-output-liquid">25</output></label>`+
       `<label class="fk-ai-control-row"><span>${i18nHtml("client.034")}</span><input aria-label="${i18nHtml("client.033")}" id="fk-select-blood-color" type="color" value="#38bdf8"></label>`+
       `<div class="fk-ai-texture-tools"><img id="fk-particle-preview" alt="${i18nHtml("client.035")}" hidden><button type="button" id="fk-particle-upload">${i18nHtml("client.036")}</button><button type="button" id="fk-particle-reset">${i18nHtml("client.037")}</button><input id="fk-particle-file" type="file" accept="image/*" hidden></div><small class="fk-ai-editor-hint">${i18nHtml("client.038")}</small></details>`+
-      `<details><summary>${i18nHtml("client.039")}</summary>`+controls.slice(4,7).map(c=>rangeControl(...c)).join('')+'</details>'+
+      `<details><summary>${i18nHtml("client.039")}</summary>`+controls.slice(4,7).map(c=>rangeControl(...c)).join('')+`<fieldset class="fk-inspector-section"><legend>${i18nHtml('rope.title')}</legend><label class="fk-ai-control-row"><input type="checkbox" id="fk-rope-enabled"><span>${i18nHtml('rope.enabled')}</span></label><label class="fk-ai-control-row"><span>${i18nHtml('rope.part')}</span><select id="fk-rope-part"></select></label>${[['x','rope.x',-50,50,1],['y','rope.y',-50,50,1],['length','rope.length',0,8000,1]].map(([id,key,min,max,step])=>`<label class="fk-ai-control-row"><span>${i18nHtml(key)}</span><input class="fk-ai-input-text" type="number" id="fk-rope-${id}" min="${min}" max="${max}" step="${step}"></label>`).join('')}<button type="button" id="fk-rope-pick">${i18nHtml('rope.pick')}</button><small class="fk-ai-editor-hint">${i18nHtml('rope.hint')}</small></fieldset></details>`+
       `<details open><summary id="fk-weapon-settings-title">${i18nHtml("client.021")}</summary>`+['damage','force','rate'].map((key,i)=>rangeControl(key,["client.040","client.041","client.042"][i],.2,3,.1,true)).join('')+`<label class="fk-ai-control-row"><span>${i18nHtml("client.043")}</span><select id="fk-audio-event" aria-label="${i18nHtml("client.043")}"><option value="attack">${i18nHtml("client.044")}</option><option value="hit">${i18nHtml("client.045")}</option><option value="charge">${i18nHtml("client.046")}</option><option value="release">${i18nHtml("client.047")}</option><option value="miss">${i18nHtml("client.048")}</option></select></label><label class="fk-ai-control-row"><span>${i18nHtml("client.049")}</span><button id="fk-audio-upload" type="button">${i18nHtml("client.050")}</button><button id="fk-audio-reset" type="button">${i18nHtml("client.051")}</button><input id="fk-audio-file" type="file" accept="audio/*" hidden></label><small id="fk-audio-label" class="fk-ai-editor-hint">${i18nHtml("client.052")}</small></details>`+
       `<details><summary>${i18nHtml("client.053")}</summary><div class="fk-ai-toggles"><label><input id="fk-pet-enabled" type="checkbox">${i18nHtml("client.054")}</label><label><input id="fk-pet-speech" type="checkbox">${i18nHtml("client.055")}</label><label><input id="fk-pet-gravity" type="checkbox">${i18nHtml("client.056")}</label></div></details>`+
       `<div class="fk-ai-toggles">`+[['swearMask',i18nText("client.057")],['flash',i18nText("client.058")],['trails',i18nText("client.059")],['numbers',i18nText("client.060")],['autoRebuild',i18nText("client.061")]].map(([key,label])=>`<label><input type="checkbox" data-setting="${key}">${label}</label>`).join('')+'</div>'+
       `<div class="fk-ai-settings-actions"><button id="fk-settings-export">${i18nHtml("client.062")}</button><button id="fk-settings-import">${i18nHtml("client.063")}</button><input type="file" id="fk-settings-file" accept="application/json,.json" hidden></div><div class="fk-ai-settings-actions"><button id="fk-puppet-export">${i18nHtml("client.064")}</button><button id="fk-puppet-import">${i18nHtml("client.065")}</button><input type="file" id="fk-puppet-file" accept="application/json,.json" hidden></div>`+
       `<button class="fk-ai-btn-reset" id="fk-settings-reset">${i18nHtml("client.066")}</button><button class="fk-ai-btn-reset" id="fk-btn-reset-dmg">${i18nHtml("client.067")}</button>`;
+    for(const key of ['enabled','part','x','y','length'])document.getElementById('fk-rope-'+key).onchange=e=>{
+      const value=key==='enabled'?e.target.checked:key==='part'?e.target.value:Number(e.target.value)/(key==='length'?1:100);settings.rope[key]=value;saveSettings();syncRopeControls();
+    };
+    document.getElementById('fk-rope-pick').onclick=()=>{combat?.pickRopeAttachment();bindText(document.getElementById('fk-rope-pick'),()=>i18nText('rope.picking'));};
     document.querySelectorAll('[data-setting]').forEach(el=>el.addEventListener('input',()=>{
       settings[el.dataset.setting]=el.type==='checkbox'?el.checked:Number(el.value);saveSettings();syncSettingsUI();
     }));
@@ -90,7 +94,7 @@
     const presets={soft:{...DEFAULT_SETTINGS,shake:.15,hitstop:.4,particles:.4,liquid:10,volume:.25},
       arcade:{...DEFAULT_SETTINGS},chaos:{...DEFAULT_SETTINGS,knockback:1.7,power:1.4,toughness:.6,shake:1,particles:1.5,liquid:50,bounce:.7}};
     document.querySelectorAll('[data-preset]').forEach(el=>el.addEventListener('click',()=>{
-      settings=normalizeSettings({...presets[el.dataset.preset],modelName:settings.modelName,liquidColor:settings.liquidColor,particleTexture:settings.particleTexture,theme:settings.theme,weaponSounds:settings.weaponSounds,customWeapons:settings.customWeapons,dialogue:settings.dialogue,pet:settings.pet,swearWords:settings.swearWords,swearMask:settings.swearMask});saveSettings();syncSettingsUI();
+      settings=normalizeSettings({...presets[el.dataset.preset],modelName:settings.modelName,liquidColor:settings.liquidColor,particleTexture:settings.particleTexture,theme:settings.theme,weaponSounds:settings.weaponSounds,customWeapons:settings.customWeapons,dialogue:settings.dialogue,rope:settings.rope,pet:settings.pet,swearWords:settings.swearWords,swearMask:settings.swearMask});saveSettings();syncSettingsUI();
     }));
     document.getElementById('fk-settings-reset').onclick=()=>{settings=normalizeSettings({customWeapons:settings.customWeapons,dialogue:settings.dialogue,theme:settings.theme,pet:settings.pet,swearWords:settings.swearWords,swearMask:settings.swearMask});saveSettings();syncSettingsUI();};
     document.getElementById('fk-settings-export').onclick=()=>{
@@ -128,6 +132,7 @@
       catch(error){targetStatus=error.message;showSaveStatus();}finally{e.target.value='';}
     };
     document.addEventListener('keydown',e=>{
+      if(document.querySelector('.fk-part-dialog[open]'))return;
       if(e.key==='Escape'&&!document.getElementById('fk-theme-panel').hidden)return;
       if(!state.isOpen||state.currentTab!=='arena'||e.ctrlKey||e.altKey||e.metaKey||e.repeat||e.target.closest('input,textarea,select,[contenteditable="true"]'))return;
       if(e.code==='KeyR'){e.preventDefault();combat.reset();}
@@ -178,9 +183,15 @@
     graphSettings.querySelector('button').onclick=()=>{const w=catalog()[state.currentWeapon];if(!w?.graph)return;selectSidebarModule('workshop');weaponEditor.openWeaponSettings(w);};
     const workbench=document.createElement('section');workbench.id='fk-modeler';workbench.className='fk-modeler';workbench.hidden=true;document.querySelector('.fk-ai-stage-column').append(workbench);
     modeler=createModeler(workbench,{
-      onSelect(id){const select=document.getElementById('fk-texture-part');select.value=id;const preset=state.config?.presets?.find(p=>p.id===state.target.id),part=normalizeRig(preset?.rig).find(p=>p.id===id);if(part){for(const k of ['x','y','width','height'])document.getElementById('fk-part-'+k).value=part[k];}syncTargetEditor();},
-      onDraft(part){if(part)for(const k of ['x','y','width','height'])document.getElementById('fk-part-'+k).value=part[k];},
-      onCommit(rig){return targetOperation('/presets','PATCH',{id:state.target.id,rig});}
+      sidebar:panels.model,onSelect(id){const select=document.getElementById('fk-texture-part');select.value=id;syncTargetEditor();},
+      onDraft(part){if(part){for(const k of ['x','y','width','height','rotation'])document.getElementById('fk-part-'+k).value=part[k];document.getElementById('fk-part-opacity').value=Math.round(part.opacity*100);document.getElementById('fk-part-opacity-value').value=Math.round(part.opacity*100)+'%';document.getElementById('fk-part-flipX').checked=part.flipX;document.getElementById('fk-part-flipY').checked=part.flipY;}},
+      onCommit(document){
+        const previous=state.config?.presets?.find(p=>p.id===state.target.id)||{},textures={};
+        for(const p of document.rig)if(previous.textures?.[p.id]!==document.textures[p.id])textures[p.id]=document.textures[p.id]??null;
+        const oldSequences=Object.fromEntries(Object.entries(previous.sequences||{}).filter(([id])=>document.rig.some(p=>p.id===id)));
+        const sequencesChanged=Object.keys(oldSequences).length!==Object.keys(document.sequences).length||Object.entries(document.sequences).some(([id,next])=>{const old=oldSequences[id];return !old||old.fps!==next.fps||old.frames.length!==next.frames.length||old.frames.some((frame,i)=>frame!==next.frames[i]);});
+        return targetOperation('/presets','PATCH',{id:state.target.id,rig:document.rig,groups:document.groups,layers:document.layers,bones:document.bones,...(Object.keys(textures).length?{textures}:{}),...(sequencesChanged?{sequences:document.sequences}:{})});
+      },onError(error){targetStatus=error.message;showSaveStatus();}
     });
     const weaponWorkbench=document.createElement('section');weaponWorkbench.id='fk-weapon-workbench';weaponWorkbench.hidden=true;weaponWorkbench.innerHTML=`<header><strong>${i18nHtml("client.087")}</strong><span>${i18nHtml("client.088")}</span></header>`;document.querySelector('.fk-ai-stage-column').append(weaponWorkbench);
     weaponEditor=createWeaponEditor(panels.workshop,{previewHost:weaponWorkbench,getSettings:()=>settings,save(weapons){settings.customWeapons=weapons;saveSettings();refreshWeaponStrip();},equip(id){chooseWeapon(id);},exportJson});
@@ -268,7 +279,17 @@
     modeler?.refresh();
     bindText(document.getElementById('fk-theme-mode-hint'),()=>i18nText("client.109")+(palette.mode==='dark'?i18nText("client.102"):i18nText("client.103"))+i18nText("client.110"), "textContent");
   }
+  function syncRopeControls(){
+    const select=document.getElementById('fk-rope-part');if(!select)return;
+    const preset=(state.config?.presets||[]).find(p=>p.id===state.target?.id)||state.config?.activeTarget;
+    const parts=preset?.rig||[],signature=JSON.stringify(parts.map(p=>[p.id,p.name]));
+    if(select.dataset.parts!==signature){select.replaceChildren(new Option('', ''),...parts.map(p=>new Option(p.name,p.id)));select.dataset.parts=signature;}
+    bindText(select.options[0],()=>i18nText('rope.autoPart'));select.value=parts.some(p=>p.id===settings.rope.part)?settings.rope.part:'';
+    for(const key of ['enabled','x','y','length']){const el=document.getElementById('fk-rope-'+key);if(key==='enabled')el.checked=settings.rope.enabled;else if(document.activeElement!==el)el.value=settings.rope[key]*(key==='length'?1:100);}
+    document.getElementById('fk-rope-pick').disabled=!state.target?.id;bindText(document.getElementById('fk-rope-pick'),()=>i18nText('rope.pick'));
+  }
   function syncSettingsUI() {
+    syncRopeControls();
     syncThemeUI();refreshWeaponStrip();weaponEditor?.sync();dialogueEditor?.sync();
     for(const el of document.querySelectorAll('[data-setting]')) {
       const value=settings[el.dataset.setting];if(el.type==='checkbox')el.checked=value;else el.value=value;
@@ -321,6 +342,7 @@
   }
   function initCombat() {
     combat=createCombat(document.getElementById('fk-canvas'),{settings,
+      onRopeAttachment(attachment){if(attachment){settings.rope={...settings.rope,...attachment,enabled:true};saveSettings();}syncRopeControls();},
       onStatus(message){if(message){document.getElementById('fk-weapon-hint').textContent=message;}},
       onSpeech(line){pet?.hitSpeech(line.text,effectiveSettings().dialogue.duration);},
       onHit(hit){
@@ -631,7 +653,7 @@
   function renderTargets() {
     const list=document.getElementById('fk-target-list');list.replaceChildren();
     for(const preset of state.config?.presets||[]) {
-      const row=document.createElement('div');row.className='fk-ai-target-row';
+      const row=document.createElement('div');row.className='fk-ai-target-row';row.dataset.presetId=preset.id;
       const card=document.createElement('button');card.type='button';card.title=preset.name;card.disabled=targetBusy;
       card.className='fk-ai-target-card'+(state.target.id===preset.id?' active':'');
       const thumb=document.createElement('span');thumb.className='fk-ai-target-thumb';
@@ -640,10 +662,35 @@
       card.append(thumb,name);card.onclick=()=>saveTarget(preset);
       const remove=document.createElement('button');remove.type='button';remove.className='fk-ai-target-delete';remove.textContent='×';remove.disabled=targetBusy;
       bindAttribute(remove,"aria-label",()=>i18nText("client.155")+preset.name);bindText(remove,()=>i18nText("client.156"), "title");
-      remove.onclick=()=>targetOperation('/presets','DELETE',{id:preset.id});
+      remove.onclick=()=>requestTargetDeletion(preset);
       row.append(card,remove);list.append(row);
     }
     syncTargetEditor();
+  }
+  function requestTargetDeletion(preset) {
+    if(targetBusy)return;
+    let dialog=document.getElementById('fk-preset-delete-dialog');
+    if(!dialog){
+      dialog=document.createElement('dialog');dialog.id='fk-preset-delete-dialog';dialog.className='fk-part-dialog fk-preset-delete-dialog';
+      dialog.setAttribute('aria-labelledby','fk-preset-delete-title');dialog.setAttribute('aria-describedby','fk-preset-delete-message');
+      dialog.innerHTML=`<form><h3 id="fk-preset-delete-title">${i18nHtml('presets.deleteTitle')}</h3><p id="fk-preset-delete-message"></p><p id="fk-preset-delete-error" role="alert" hidden></p><div class="fk-part-dialog-actions"><button type="button" id="fk-preset-delete-cancel" autofocus>${i18nHtml('modeler.cancel')}</button><button type="submit" id="fk-preset-delete-confirm">${i18nHtml('presets.deleteConfirm')}</button></div></form>`;
+      document.querySelector('.fk-ai-modal').append(dialog);
+      let pending=null,submitting=false;
+      bindText(dialog.querySelector('p'),()=>i18nText('presets.deleteMessage',{name:pending?.name||''}));
+      const error=dialog.querySelector('#fk-preset-delete-error');
+      dialog.openFor=value=>{if(dialog.open||submitting)return;pending={id:value.id,name:value.name};error.hidden=true;error.textContent='';bindText(dialog.querySelector('p'),()=>i18nText('presets.deleteMessage',{name:pending?.name||''}));dialog.showModal();dialog.querySelector('#fk-preset-delete-cancel').focus();};
+      dialog.querySelector('#fk-preset-delete-cancel').onclick=()=>{if(!submitting)dialog.close();};
+      dialog.addEventListener('cancel',e=>{if(submitting)e.preventDefault();});
+      dialog.addEventListener('click',e=>{if(e.target!==dialog||submitting)return;const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();});
+      dialog.addEventListener('close',()=>{const id=pending?.id;pending=null;const row=[...document.querySelectorAll('[data-preset-id]')].find(row=>row.dataset.presetId===id);(row?.querySelector('.fk-ai-target-delete')||document.getElementById('fk-target-name')).focus();});
+      dialog.querySelector('form').onsubmit=async e=>{
+        e.preventDefault();if(!pending||submitting||targetBusy)return;
+        submitting=true;error.hidden=true;for(const button of dialog.querySelectorAll('button'))button.disabled=true;
+        try{if(await targetOperation('/presets','DELETE',{id:pending.id}))dialog.close();else{bindText(error,()=>targetStatus);error.hidden=false;}}
+        finally{submitting=false;for(const button of dialog.querySelectorAll('button'))button.disabled=false;}
+      };
+    }
+    dialog.openFor(preset);
   }
   async function targetOperation(route,method,payload) {
     if(targetBusy)return false;
@@ -681,49 +728,64 @@
   function mountTargetEditor() {
     const editor=document.createElement('details');editor.className='fk-ai-target-editor';editor.id='fk-target-editor';
     editor.innerHTML=`<summary>${i18nHtml("client.161")}</summary><form id="fk-target-edit-form" class="fk-ai-target-form"><input id="fk-target-edit-name" class="fk-ai-input-text" aria-label="${i18nHtml("client.160")}" maxlength="60"><button type="submit" class="fk-ai-btn-action">${i18nHtml("client.162")}</button></form>`+
-      `<label class="fk-ai-editor-label" for="fk-texture-part">${i18nHtml("client.163")}</label><select id="fk-texture-part" aria-label="${i18nHtml("client.163")}">`+Object.entries(BODY_PARTS).map(([id,name])=>`<option value="${id}">${name}</option>`).join('')+'</select>'+
-      `<div class="fk-ai-skin-preview"><img id="fk-texture-preview" alt="${i18nHtml("client.164")}" hidden><span id="fk-texture-label">${i18nHtml("client.165")}</span></div>`+
+      `<select id="fk-texture-part" aria-label="${i18nHtml("client.163")}" hidden></select><section class="fk-model-sidebar"><header class="fk-model-sidebar-head"><strong>${i18nHtml('modeler.layers')}</strong><div class="fk-layer-actions"><button type="button" id="fk-part-add" title="${i18nHtml('client.179')}" aria-label="${i18nHtml('client.179')}">${modelIcon('add')}</button><button type="button" id="fk-group-add" title="${i18nHtml('modeler.newGroup')}" aria-label="${i18nHtml('modeler.newGroup')}">${modelIcon('groupAdd')}</button></div></header><div class="fk-layer-tree" id="fk-layer-tree" role="tree"></div><small class="fk-ai-editor-hint">${i18nHtml('modeler.layerHint')}</small><div class="fk-model-properties"><header class="fk-inspector-head"><h3>${i18nHtml('modeler.properties')}</h3><span id="fk-inspector-context">${i18nHtml('modeler.partInspector')}</span></header><div id="fk-part-properties"><form id="fk-part-form"><label class="fk-part-name-field">${i18nHtml("modeler.partName")}<input class="fk-ai-input-text" id="fk-part-name" aria-label="${i18nHtml("modeler.partName")}" maxlength="40" required></label><fieldset class="fk-inspector-section"><legend>${i18nHtml('modeler.transform')}</legend><div class="fk-inspector-grid">`+[['width',i18nText("client.169"),6,null],['height',i18nText("client.170"),6,null],['x',i18nText("client.171"),null,null],['y',i18nText("client.172"),null,null],['rotation',i18nText('modeler.rotation'),-360,360]].map(([id,label,min,max])=>`<label>${label}<input class="fk-ai-input-text" id="fk-part-${id}" aria-label="${i18nHtml("client.173", {v0: label})}" type="number" ${min===null?'':`min="${min}"`} ${max===null?'':`max="${max}"`} step="any" required></label>`).join('')+`</div></fieldset><fieldset class="fk-inspector-section"><legend>${i18nHtml('modeler.appearance')}</legend><div class="fk-inspector-grid"><label class="fk-ai-control-row fk-part-full"><span>${i18nHtml('modeler.opacity')}</span><input id="fk-part-opacity" type="range" min="0" max="100" value="100"><output id="fk-part-opacity-value">100%</output></label><label class="fk-ai-control-row"><input id="fk-part-flipX" type="checkbox"><span>${i18nHtml('modeler.flipX')}</span></label><label class="fk-ai-control-row"><input id="fk-part-flipY" type="checkbox"><span>${i18nHtml('modeler.flipY')}</span></label><label class="fk-ai-control-row fk-part-full"><input id="fk-part-visible" type="checkbox"><span>${i18nHtml('modeler.visible')}</span></label></div></fieldset><fieldset class="fk-inspector-section"><legend>${i18nHtml('modeler.boneBinding')}</legend><label>${i18nHtml('modeler.boneBinding')}<select id="fk-part-bone" aria-label="${i18nHtml('modeler.boneBinding')}"></select></label></fieldset><div class="fk-inspector-actions"><button class="fk-ai-btn-action" type="submit">${i18nHtml("client.176")}</button><button type="button" id="fk-part-crop-reset">${i18nHtml('modeler.cropReset')}</button><button type="button" id="fk-part-remove">${i18nHtml('modeler.delete')}</button></div></form></div><div id="fk-group-properties" hidden><form id="fk-group-form"><label>${i18nHtml('modeler.groupName')}<input class="fk-ai-input-text" id="fk-group-name" maxlength="40" required></label><button type="submit">${i18nHtml('modeler.saveGroup')}</button></form><p id="fk-group-info" class="fk-ai-editor-hint"></p><button type="button" id="fk-group-ungroup">${i18nHtml('modeler.deleteGroup')}</button></div></div></section>`+
+      `<div id="fk-part-assets"><label class="fk-ai-editor-label">${i18nHtml('modeler.material')}</label><div class="fk-ai-skin-preview"><img id="fk-texture-preview" alt="${i18nHtml("client.164")}" hidden><span id="fk-texture-label">${i18nHtml("client.165")}</span></div>`+
       `<div class="fk-ai-texture-tools"><button type="button" id="fk-texture-upload">${i18nHtml("client.166")}</button><button type="button" id="fk-texture-reset">${i18nHtml("client.167")}</button><input id="fk-texture-file" type="file" accept="image/*" hidden></div><small class="fk-ai-editor-hint">${i18nHtml("client.168")}</small>`+
-      `<form id="fk-part-form" class="fk-ai-part-grid">`+[['width',i18nText("client.169"),6,220],['height',i18nText("client.170"),6,220],['x',i18nText("client.171"),-260,260],['y',i18nText("client.172"),-210,210]].map(([id,label,min,max])=>`<label>${label}<input class="fk-ai-input-text" id="fk-part-${id}" aria-label="${i18nHtml("client.173", {v0: label})}" type="number" min="${min}" max="${max}" step="1" required></label>`).join('')+`<label>${i18nHtml("client.175")}<select id="fk-part-parent" aria-label="${i18nHtml("client.174")}"></select></label><button class="fk-ai-btn-action" type="submit">${i18nHtml("client.176")}</button></form>`+
-      `<div class="fk-ai-texture-tools"><input class="fk-ai-input-text" id="fk-part-new-name" aria-label="${i18nHtml("client.177")}" maxlength="40" placeholder="${i18nHtml("client.178")}"><button type="button" id="fk-part-add">${i18nHtml("client.179")}</button><button type="button" id="fk-part-remove">${i18nHtml("client.180")}</button></div>`+
-      `<label class="fk-ai-editor-label">${i18nHtml("client.182")}</label><label class="fk-ai-control-row"><span>${i18nHtml("client.181")}</span><input class="fk-ai-input-text" id="fk-sequence-fps" aria-label="${i18nHtml("client.181")}" type="number" min="1" max="30" value="8" style="width:70px"></label><div class="fk-ai-texture-tools"><button type="button" id="fk-sequence-upload">${i18nHtml("client.183")}</button><button type="button" id="fk-sequence-reset">${i18nHtml("client.184")}</button><input id="fk-sequence-file" type="file" multiple accept="image/png,image/webp,image/jpeg" hidden></div><small id="fk-sequence-label" class="fk-ai-editor-hint">${i18nHtml("client.185")}</small>`;
+      `<label class="fk-ai-editor-label">${i18nHtml("client.182")}</label><label class="fk-ai-control-row"><span>${i18nHtml("client.181")}</span><input class="fk-ai-input-text" id="fk-sequence-fps" aria-label="${i18nHtml("client.181")}" type="number" min="1" max="30" value="8" style="width:70px"></label><div class="fk-ai-texture-tools"><button type="button" id="fk-sequence-upload">${i18nHtml("client.183")}</button><button type="button" id="fk-sequence-reset">${i18nHtml("client.184")}</button><input id="fk-sequence-file" type="file" multiple accept="image/png,image/webp,image/jpeg" hidden></div><small id="fk-sequence-label" class="fk-ai-editor-hint">${i18nHtml("client.185")}</small></div>`;
+    editor.querySelector('#fk-part-properties').append(editor.querySelector('#fk-part-assets'));
     document.querySelector('.fk-ai-fx-controls').before(editor);
+    const dialog=document.createElement('dialog');dialog.id='fk-part-dialog';dialog.className='fk-part-dialog';
+    dialog.innerHTML=`<form id="fk-part-add-form"><h3>${i18nHtml('modeler.addPartTitle')}</h3><label for="fk-part-new-name">${i18nHtml('modeler.partName')}</label><input class="fk-ai-input-text" id="fk-part-new-name" aria-label="${i18nHtml('client.177')}" maxlength="40" placeholder="${i18nHtml('client.178')}" required autofocus><div class="fk-part-dialog-actions"><button type="button" id="fk-part-add-cancel">${i18nHtml('modeler.cancel')}</button><button type="submit" id="fk-part-add-confirm">${i18nHtml('modeler.addPartConfirm')}</button></div></form>`;
+    document.querySelector('.fk-ai-modal').append(dialog);
+    let addingTarget='',addingLayer=null;
+    document.getElementById('fk-part-add-cancel').onclick=()=>dialog.close();
+    dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
+    dialog.addEventListener('close',()=>{document.getElementById('fk-part-add').focus();});
+
     document.getElementById('fk-target-edit-form').onsubmit=async e=>{e.preventDefault();if(state.target.id)await targetOperation('/presets','PATCH',{id:state.target.id,name:document.getElementById('fk-target-edit-name').value});};
-    document.getElementById('fk-texture-part').onchange=()=>{imageUploadRevision++;syncTargetEditor();};
+    document.getElementById('fk-texture-part').onchange=()=>{imageUploadRevision++;modeler?.selectPart(document.getElementById('fk-texture-part').value);syncTargetEditor();};
     document.getElementById('fk-texture-upload').onclick=()=>document.getElementById('fk-texture-file').click();
-    document.getElementById('fk-texture-reset').onclick=()=>{imageUploadRevision++;targetOperation('/presets','PATCH',{id:state.target.id,textures:{[document.getElementById('fk-texture-part').value]:null}});};
+    document.getElementById('fk-texture-reset').onclick=()=>{imageUploadRevision++;const id=document.getElementById('fk-texture-part').value;modeler?.edit(d=>{delete d.textures[id];});};
     document.getElementById('fk-texture-file').onchange=async e=>{
       const id=state.target.id,part=document.getElementById('fk-texture-part').value,revision=++imageUploadRevision;
       try {const file=e.target.files?.[0];if(!file||!id)return;const texture=await encodeTexture(file,512);
         if(revision!==imageUploadRevision||state.target.id!==id)return;
-        await targetOperation('/presets','PATCH',{id,textures:{[part]:texture}});
+        await modeler?.edit(d=>{d.textures[part]=texture;});
       }catch(error){targetStatus=error.message;showSaveStatus();}finally{e.target.value='';}
     };
     const current=()=>state.config?.presets?.find(p=>p.id===state.target.id);
     document.getElementById('fk-part-form').onsubmit=async e=>{
       e.preventDefault();const preset=current();if(!preset)return;
-      const part=document.getElementById('fk-texture-part').value,rig=normalizeRig(preset.rig).map(p=>p.id!==part?p:{...p,...Object.fromEntries(['width','height','x','y'].map(key=>[key,Number(document.getElementById('fk-part-'+key).value)])),parent:document.getElementById('fk-part-parent').value||null});
-      await targetOperation('/presets','PATCH',{id:preset.id,rig});
+      const nameInput=document.getElementById('fk-part-name');nameInput.value=nameInput.value.trim();if(!e.target.reportValidity())return;
+      const part=document.getElementById('fk-texture-part').value,rig=normalizeRig(preset.rig).map(p=>p.id!==part?p:{...p,...Object.fromEntries(['width','height','x','y','rotation'].map(key=>[key,Number(document.getElementById('fk-part-'+key).value)])),opacity:Number(document.getElementById('fk-part-opacity').value)/100,flipX:document.getElementById('fk-part-flipX').checked,flipY:document.getElementById('fk-part-flipY').checked,visible:document.getElementById('fk-part-visible').checked,name:document.getElementById('fk-part-name').value.trim(),bone:document.getElementById('fk-part-bone').value||null});
+      await modeler?.patchPart(part,rig.find(p=>p.id===part));
     };
-    document.getElementById('fk-part-add').onclick=async()=>{
-      const preset=current();if(!preset)return;const rig=normalizeRig(preset.rig),parent=rig.find(p=>p.id===document.getElementById('fk-texture-part').value),id='part_'+crypto.randomUUID().replaceAll('-','').slice(0,16);
-      rig.push({id,name:document.getElementById('fk-part-new-name').value.trim()||i18nText("client.186"),parent:parent.id,x:Math.min(250,parent.x+55),y:parent.y,width:30,height:40});
-      if(await targetOperation('/presets','PATCH',{id:preset.id,rig})){document.getElementById('fk-texture-part').value=id;document.getElementById('fk-part-new-name').value='';syncTargetEditor();}
+    document.getElementById('fk-part-add').onclick=()=>{
+      const preset=current();if(!preset||targetBusy)return;addingTarget=preset.id;addingLayer=modeler?.getSelection().id||null;
+      document.getElementById('fk-part-new-name').value='';dialog.showModal();
     };
-    document.getElementById('fk-part-remove').onclick=async()=>{
-      const preset=current();if(!preset)return;const rig=normalizeRig(preset.rig),id=document.getElementById('fk-texture-part').value,part=rig.find(p=>p.id===id);
-      await targetOperation('/presets','PATCH',{id:preset.id,rig:rig.filter(p=>p.id!==id).map(p=>p.parent===id?{...p,parent:part.parent}:p)});
+    document.getElementById('fk-part-add-form').onsubmit=async e=>{
+      e.preventDefault();const preset=current(),input=document.getElementById('fk-part-new-name'),name=input.value.trim();
+      input.value=name;if(!e.target.reportValidity())return;
+      if(!preset||preset.id!==addingTarget||targetBusy||!name)return;
+      const confirm=document.getElementById('fk-part-add-confirm');confirm.disabled=true;
+      try{if(await modeler?.addPart(name,addingLayer)){syncTargetEditor();dialog.close();}}finally{confirm.disabled=false;}
     };
+    document.getElementById('fk-part-remove').onclick=()=>modeler?.remove();
+    document.getElementById('fk-part-crop-reset').onclick=()=>modeler?.resetCrop(document.getElementById('fk-texture-part').value);
+    document.getElementById('fk-part-opacity').oninput=e=>{document.getElementById('fk-part-opacity-value').value=e.target.value+'%';};
+    document.getElementById('fk-part-opacity').onchange=()=>{const preset=current(),id=document.getElementById('fk-texture-part').value;if(preset)modeler?.patchPart(id,{opacity:Number(document.getElementById('fk-part-opacity').value)/100});};
+    for(const id of ['fk-part-flipX','fk-part-flipY','fk-part-visible'])document.getElementById(id).onchange=()=>{const part=document.getElementById('fk-texture-part').value,patch={[id.slice(9)]:document.getElementById(id).checked};modeler?.patchPart(part,patch);};
     document.getElementById('fk-sequence-upload').onclick=()=>document.getElementById('fk-sequence-file').click();
     document.getElementById('fk-sequence-file').onchange=async e=>{
       const preset=current(),part=document.getElementById('fk-texture-part').value,revision=++imageUploadRevision;
       try {const files=[...e.target.files].sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));if(!files.length||!preset)return;if(files.length>24)throw new Error(i18nText("client.187"));
         const frames=[];for(const f of files)frames.push(await encodeTexture(f,512));if(revision!==imageUploadRevision||state.target.id!==preset.id)return;
-        await targetOperation('/presets','PATCH',{id:preset.id,sequences:{...preset.sequences,[part]:{frames,fps:Number(document.getElementById('fk-sequence-fps').value)}}});
+        await modeler?.edit(d=>{d.sequences[part]={frames,fps:Number(document.getElementById('fk-sequence-fps').value)};});
       }catch(error){targetStatus=error.message;showSaveStatus();}finally{e.target.value='';}
     };
-    document.getElementById('fk-sequence-reset').onclick=async()=>{imageUploadRevision++;const preset=current();if(!preset)return;const sequences={...preset.sequences};delete sequences[document.getElementById('fk-texture-part').value];await targetOperation('/presets','PATCH',{id:preset.id,sequences});};
-    document.getElementById('fk-sequence-fps').onchange=async e=>{const preset=current(),part=document.getElementById('fk-texture-part').value;if(preset?.sequences?.[part])await targetOperation('/presets','PATCH',{id:preset.id,sequences:{...preset.sequences,[part]:{...preset.sequences[part],fps:Number(e.target.value)}}});};
+    document.getElementById('fk-sequence-reset').onclick=async()=>{imageUploadRevision++;const preset=current();if(!preset)return;const id=document.getElementById('fk-texture-part').value;await modeler?.edit(d=>{delete d.sequences[id];});};
+    document.getElementById('fk-sequence-fps').onchange=async e=>{const preset=current(),part=document.getElementById('fk-texture-part').value;if(preset?.sequences?.[part])await modeler?.edit(d=>{d.sequences[part].fps=Number(e.target.value);});};
     syncTargetEditor();
   }
   function syncTargetEditor() {
@@ -734,9 +796,10 @@
     if(document.activeElement!==name)name.value=preset?.name||'';
     const rig=normalizeRig(preset?.rig),select=document.getElementById('fk-texture-part'),selected=select.value;
     select.replaceChildren(...rig.map(p=>new Option(p.name,p.id)));if(rig.some(p=>p.id===selected))select.value=selected;
-    const part=select.value,definition=rig.find(p=>p.id===part),texture=preset?.sequences?.[part]?.frames[0]||preset?.textures?.[part]||(part==='head'?preset?.avatar:'');
-    for(const key of ['width','height','x','y']){const input=document.getElementById('fk-part-'+key);if(document.activeElement!==input)input.value=definition[key];}
-    const parent=document.getElementById('fk-part-parent');parent.replaceChildren(new Option(i18nText("client.188"), 'null'),...rig.filter(p=>p.id!==part).map(p=>new Option(p.name,p.id)));parent.options[0].value='';parent.value=definition.parent||'';
+    const part=select.value,definition=rig.find(p=>p.id===part)||rig[0],texture=preset?.sequences?.[part]?.frames[0]||preset?.textures?.[part]||(part==='head'?preset?.avatar:'');
+    for(const key of ['name','width','height','x','y','rotation']){const input=document.getElementById('fk-part-'+key);if(document.activeElement!==input)input.value=definition[key];}
+    for(const [key,value] of [['opacity',Math.round((definition.opacity??1)*100)],['flipX',definition.flipX??false],['flipY',definition.flipY??false],['visible',definition.visible??true]]){const input=document.getElementById('fk-part-'+key);if(document.activeElement!==input)input.type==='checkbox'?input.checked=value:input.value=value;}document.getElementById('fk-part-opacity-value').value=Math.round((definition.opacity??1)*100)+'%';
+    const binding=document.getElementById('fk-part-bone');binding.replaceChildren(new Option(i18nText('modeler.boneNone'),''),...(preset?.bones||[]).map(b=>new Option(b.name,b.id)));binding.value=definition.bone||'';
     document.getElementById('fk-part-remove').disabled=targetBusy||!preset||rig.length===1;
     document.getElementById('fk-part-add').disabled=targetBusy||!preset||rig.length>=24;
     const sequence=preset?.sequences?.[part];document.getElementById('fk-sequence-fps').value=sequence?.fps||8;
@@ -744,7 +807,7 @@
     const preview=document.getElementById('fk-texture-preview');preview.hidden=!texture;
     if(texture)preview.src=texture;else preview.removeAttribute('src');
     bindText(document.getElementById('fk-texture-label'),()=>preset?(preset.sequences?.[part]?i18nText("client.190"):preset.textures?.[part]?i18nText("client.191"):i18nText("client.165")):i18nText("client.192"), "textContent");
-    if(!targetBusy)modeler?.setPreset(preset);modeler?.select(part);
+    if(!targetBusy)modeler?.setPreset(preset);
   }
   async function encodeTexture(file,maxSize) {
     if(!file.type.startsWith('image/')||file.size>12*1024*1024)throw new Error(i18nText("client.158"));
@@ -759,8 +822,8 @@
   function setTarget(t) {
     combat?.setDialogueOwner(t?.id||'');
     dialogueEditor?.sync();combat?.updateSettings(effectiveSettings());
-    const revisionKey=t?JSON.stringify([t.id,t.name,t.avatar,t.textures,t.rig,t.sequences]):'';
-    if(!t){targetImageRevision++;targetImageKey='';state.target={id:null,name:'',avatarImg:null};combat.setTarget(null);combat.setTargetEnabled(false);petReady=true;pet?.setTarget(null);return;}
+    const revisionKey=t?JSON.stringify([t.id,t.name,t.avatar,t.textures,t.rig,t.groups,t.layers,t.bones,t.sequences]):'';
+    if(!t){targetImageRevision++;targetImageKey='';state.target={id:null,name:'',avatarImg:null};combat.setTarget(null);combat.setTargetEnabled(false);petReady=true;pet?.setTarget(null);syncRopeControls();return;}
     const changed=state.target.id!==t.id;
     combat.setTargetEnabled(true);if(changed)combat.reset();
     state.target.id=t.id;state.target.name=t.name;dialogueEditor?.sync();combat.updateSettings(effectiveSettings());
@@ -769,7 +832,7 @@
     if(changed)combat.setTarget(null);
     loadPuppetImages(t).then(({rig,avatar,skins,sequences})=>{
       if(revision!==targetImageRevision)return;
-      state.target.avatarImg=avatar;combat.setRig(rig);combat.setTarget(avatar,skins,sequences);petReady=true;pet?.setTarget({id:t.id,name:t.name,rig,avatar,skins,sequences});
+      state.target.avatarImg=avatar;syncRopeControls();combat.setRig(rig);combat.setTarget(avatar,skins,sequences);petReady=true;pet?.setTarget({id:t.id,name:t.name,rig,groups:t.groups||[],avatar,skins,sequences});
     }).catch(error=>{targetStatus=error.message;showSaveStatus();});
   }
 

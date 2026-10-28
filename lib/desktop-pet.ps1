@@ -213,6 +213,9 @@ function Add-Command($action,$data=@{}){
 }
 function Arena-Input($action,$e){$p=$e.GetPosition($root);Add-Command $action @{x=$p.X;y=$p.Y}}
 $motion.Add_DoubleClick({Restore-Host})
+$window.Add_PreviewMouseRightButtonDown({param($sender,$e)
+ if($script:mode -ne 'arena' -or $bar.IsMouseOver){return};$script:pressed=$false;$window.ReleaseMouseCapture();Arena-Input 'teleport' $e;$e.Handled=$true
+})
 $window.Add_PreviewMouseLeftButtonDown({param($sender,$e)
  if($script:mode -ne 'arena' -or $bar.IsMouseOver){return};$script:pressed=$true;Arena-Input 'down' $e;$window.CaptureMouse()|Out-Null;$e.Handled=$true
 })

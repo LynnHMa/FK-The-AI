@@ -1,4 +1,5 @@
 import {t as i18nText} from './i18n.js';
+import {validTexture} from './puppet.js';
 import {normalizeGraph,graphRecipe,migrateLegacyWeapon} from './weapon-graph.js';
 export const WEAPONS = Object.freeze({
   fist:      { get name(){return i18nText("weapons.001");}, get hint(){return i18nText("weapons.002");}, damage: 12, force: 320, interval: .16, color: '#e5d2b5' },
@@ -19,6 +20,15 @@ export const WEAPON_KEYS = Object.freeze(['1','2','3','4','5','6','7','8','9','0
 
 
 export const CUSTOM_ID=/^custom_[a-zA-Z0-9_-]{1,64}$/;
+export const DEFAULT_WEAPON_APPEARANCE=Object.freeze({fps:12,width:100,height:60,pivotX:.25,pivotY:.5,muzzleX:1,muzzleY:.5,rotation:0,aim:true});
+export function normalizeWeaponAppearance(value,strict=false){
+ const out={...DEFAULT_WEAPON_APPEARANCE,frames:[]};if(value==null)return out;
+ const fail=()=>{if(strict)throw new Error(i18nText('weapon.spriteInvalid'));return {...DEFAULT_WEAPON_APPEARANCE,frames:[]};};
+ if(typeof value!=='object'||!Array.isArray(value.frames)||value.frames.length>24||value.frames.some(frame=>!validTexture(frame)||frame.length>700000)||value.frames.reduce((n,frame)=>n+frame.length,0)>8000000)return fail();
+ for(const [key,min,max]of [['fps',1,30],['width',1,2000],['height',1,2000],['pivotX',0,1],['pivotY',0,1],['muzzleX',0,1],['muzzleY',0,1],['rotation',-360,360]])if(value[key]!==undefined){if(!Number.isFinite(value[key])||value[key]<min||value[key]>max)return fail();out[key]=value[key];}
+ if(value.aim!==undefined&&typeof value.aim!=='boolean')return fail();
+ out.aim=value.aim??out.aim;out.frames=[...value.frames];return out;
+}
 export function normalizeWeapon(value,strict=false){
  if(!value||typeof value.id!=='string'||!CUSTOM_ID.test(value.id)){if(strict)throw new Error(i18nText("weapons.027"));return null;}
  let graph=value.graph;
@@ -27,7 +37,7 @@ export function normalizeWeapon(value,strict=false){
  const damage=graph.nodes.find(n=>n.type==='effect'&&n.params.kind==='damage')?.params.amount||0;
  const force=graph.nodes.find(n=>n.type==='effect'&&n.params.kind==='impulse')?.params.force||0;
  const trigger=graph.nodes.find(n=>n.type==='trigger'),appearance=graph.nodes.find(n=>['projectile','beam','area','visual'].includes(n.type));
- return {version:2,id:value.id,name:typeof value.name==='string'&&value.name.trim()?value.name.trim().slice(0,40):i18nText("weapons.028"),behavior:'graph',damage,force,interval:trigger?.params.interval||.2,color:appearance?.params.color||'#9acaff',graph};
+ return {version:2,id:value.id,name:typeof value.name==='string'&&value.name.trim()?value.name.trim().slice(0,40):i18nText("weapons.028"),behavior:'graph',damage,force,interval:trigger?.params.interval||.2,color:appearance?.params.color||'#9acaff',appearance:normalizeWeaponAppearance(value.appearance,strict),graph};
 }
 export function normalizeWeapons(value){const seen=new Set();return (Array.isArray(value)?value:[]).slice(0,48).map(v=>normalizeWeapon(v)).filter(w=>w&&!seen.has(w.id)&&seen.add(w.id));}
 export function weaponCatalog(settings={}){return {...WEAPONS,...Object.fromEntries(normalizeWeapons(settings.customWeapons).map(w=>[w.id,{...w,gun:false,hint:i18nText("weapons.029")+w.graph.nodes.length+i18nText("weapons.030")+w.graph.links.length+i18nText("weapons.031")}]))};}
